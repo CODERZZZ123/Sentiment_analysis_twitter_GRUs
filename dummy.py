@@ -266,7 +266,7 @@ class SentimentAnalysisModel:
         inputs = inputs[None, :]
         preds_probs = self.model(inputs)
         preds = int(preds_probs[0, 1] > preds_probs[0, 0])
-        sentiment = "positive" if preds == 0 else "negative"
+        sentiment = "positive" if preds == 1 else "negative"
         return preds, sentiment
 
     def compute_accuracy(self, preds, y, y_weights):
