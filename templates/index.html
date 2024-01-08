@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+    <style>
+        body {
+            text-align: center;
+        }
+        #container {
+            margin: 50px auto;
+            width: 60%;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h2>Sentiment Analysis</h2>
+        <form action="/predict" method="post">
+            <label for="sentence">Enter a Sentence:</label>
+            <input type="text" id="sentence" name="sentence" autocomplete="off" required>
+            <button type="submit">Predict</button>
+        </form>
+        {% if sentence %}
+            <p>Entered Sentence: {{ sentence }}</p>
+        {% endif %}
+
+        {% if prediction %}
+            <p>Sentiment Prediction: {{ prediction }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>

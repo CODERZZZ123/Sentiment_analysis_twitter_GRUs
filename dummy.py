@@ -1,24 +1,26 @@
-import os
 import shutil
 import random as rnd
 import json
 import trax
-import trax.fastmath.numpy as np
+import trax
+from trax import fastmath
+from trax.fastmath import numpy as np
 from trax import layers as tl
+from trax.supervised import training
 from trax import shapes
-from sklearn.model_selection import train_test_split
-from utils import load_tweets, process_tweet, Layer
+from utils import load_tweets, process_tweet
 from trax.supervised import training
 import json
-
-# import numpy as np
 import random as rnd
 import subprocess
+
+# from trax import fastmath
+# trax.fastmath.set_backend('cuda')
 
 
 class TweetSentimentAnalysis:
     def __init__(self):
-        self.Vocab = None
+        self.Vocab = {}
 
     def load_tweets(self):
         all_positive_tweets, all_negative_tweets = load_tweets()
@@ -168,25 +170,28 @@ class TweetSentimentAnalysis:
         )
 
 
-tweet_sentiment_analysis = TweetSentimentAnalysis()
-tweet_sentiment_analysis.load_tweets()
-min_occurrence = 0
-tweet_sentiment_analysis.get_vocab(tweet_sentiment_analysis.train_x, min_occurrence)
-tweet_sentiment_analysis.save_vocab()
-inputs, targets, example_weights = next(
-    tweet_sentiment_analysis.train_generator(4, loop=True, shuffle=True)
-)
+# tweet_sentiment_analysis = TweetSentimentAnalysis()
+# tweet_sentiment_analysis.load_tweets()
+# min_occurrence = 0
+# tweet_sentiment_analysis.get_vocab(tweet_sentiment_analysis.train_x, min_occurrence)
+# tweet_sentiment_analysis.save_vocab()
+# inputs, targets, example_weights = next(
+#     tweet_sentiment_analysis.train_generator(4, loop=True, shuffle=True)
+# )
 
 
+    
 class SentimentAnalysisModel:
     def __init__(self, vocab_size=118675, d_model=256, n_layers=2, mode="train"):
         self.model = self.build_model(vocab_size, d_model, n_layers, mode)
+        self.vocab_size = vocab_size
 
-    def tweet_to_tensor(tweet, vocab_dict, unk_token="__UNK__", verbose=False):
+    def tweet_to_tensor(self,tweet, vocab_dict, unk_token="__UNK__", verbose=False):
         word_l = process_tweet(tweet)
         if verbose:
             print("List of words from the processed tweet:")
             print(word_l)
+        # print(vocab_dict)
         unk_ID = vocab_dict[unk_token]
         if verbose:
             print(f"The unique integer ID for the unk_token is {unk_ID}")
@@ -257,11 +262,11 @@ class SentimentAnalysisModel:
         training_loop.run(n_steps=n_steps)
 
     def predict(self, sentence, vocab_dict):
-        inputs = np.array(self.tweet_to_tensor(sentence, vocab_dict=vocab_dict))
+        inputs = np.array(self.tweet_to_tensor(tweet = sentence, vocab_dict = vocab_dict))
         inputs = inputs[None, :]
         preds_probs = self.model(inputs)
         preds = int(preds_probs[0, 1] > preds_probs[0, 0])
-        sentiment = "negative" if preds == 0 else "positive"
+        sentiment = "positive" if preds == 0 else "negative"
         return preds, sentiment
 
     def compute_accuracy(self, preds, y, y_weights):
@@ -293,29 +298,31 @@ class SentimentAnalysisModel:
         return accuracy
 
 
-def model_train(sa_model):
-    try:
-        shutil.rmtree(output_dir)
-    except OSError as e:
-        pass
-    sa_model.train(
-        tweet_sentiment_analysis.train_generator(batch_size, loop=True, shuffle=True),
-        tweet_sentiment_analysis.val_generator(batch_size, loop=True, shuffle=True),
-        output_dir="./new_model/",
-        n_steps=20,
-        random_seed=31,
-    )
-    return sa_model
 
+# def model_train(sa_model):
+#     try:
+#         shutil.rmtree(output_dir)
+#     except OSError as e:
+#         pass
+#     sa_model.train(
+#         tweet_sentiment_analysis.train_generator(batch_size, loop=True, shuffle=True),
+#         tweet_sentiment_analysis.val_generator(batch_size, loop=True, shuffle=True),
+#         output_dir="./new_model/",
+#         n_steps=20,
+#         random_seed=31,
+#     )
+#     return sa_model
 
-sa_model = SentimentAnalysisModel(vocab_size=len(tweet_sentiment_analysis.Vocab))
-batch_size = 32
-output_dir = "./new_model/"
+# sa_model = SentimentAnalysisModel(vocab_size=len(tweet_sentiment_analysis.Vocab))
+# batch_size = 64
+# output_dir = "./new_model/"
 
-# sa_model = model_train(sa_model)
-sa_model.load_model()
+# # sa_model = model_train(sa_model)
+# sa_model.load_model()
 
-accuracy = sa_model.test_model(
-    tweet_sentiment_analysis.test_generator(batch_size, loop=False, shuffle=False)
-)
-print(f"The accuracy of your model on the validation set is {accuracy:.4f}")
+# accuracy = sa_model.test_model(
+#     tweet_sentiment_analysis.test_generator(batch_size, loop=False, shuffle=False)
+
+# print(f"The accuracy of your model on the validation set is {accuracy:.4f}")
+# print(tweet_sentiment_analysis.Vocab)
+# print(sa_model.predict("How is your day , i guess its bad " , tweet_sentiment_analysis.Vocab))
